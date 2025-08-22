@@ -23,6 +23,9 @@ Configure the following secrets in your GitHub repository settings:
 - `SCALEWAY[1-4]_ACCESS_KEY` - Scaleway S3 access key
 - `SCALEWAY[1-4]_SECRET_KEY` - Scaleway S3 secret key
 
+#### For notifications (ntfy):
+- `NTFY_URL` - Your ntfy server URL/topic
+
 Endpoints and regions are hardcoded:
 - Hetzner: `https://hel1.your-objectstorage.com` (region: `eu-central`)
 - Scaleway: `https://s3.fr-par.scw.cloud` (region: `fr-par`)

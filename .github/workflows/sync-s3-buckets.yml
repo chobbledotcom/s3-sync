@@ -20,13 +20,6 @@ jobs:
           packages: rclone jq
           version: 1.0
       
-      - name: Install AWS CLI
-        run: |
-          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip -q awscliv2.zip
-          sudo ./aws/install
-          aws --version
-      
       - name: Run S3 bucket sync
         env:
           # Pair 1 credentials
@@ -57,12 +50,18 @@ jobs:
       
       - name: Send notification on failure
         if: failure()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: 'S3 Sync Failed',
-              body: `The S3 bucket sync workflow failed. [Check the logs](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`
-            })
+        run: |
+          curl \
+            -H "Title: S3 Sync Failed" \
+            -H "Content-Type: text/plain" \
+            -d $'Repo: ${{ github.repository }}\nCommit: ${{ github.sha }}\nRef: ${{ github.ref }}\nStatus: Failed\nRun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}' \
+            ${{ secrets.NTFY_URL }}
+      
+      - name: Send notification on success
+        if: success()
+        run: |
+          curl \
+            -H "Title: S3 Sync Completed" \
+            -H "Content-Type: text/plain" \
+            -d $'Repo: ${{ github.repository }}\nCommit: ${{ github.sha }}\nRef: ${{ github.ref }}\nStatus: Success' \
+            ${{ secrets.NTFY_URL }}
