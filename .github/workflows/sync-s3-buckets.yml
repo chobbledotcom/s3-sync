@@ -1,0 +1,68 @@
+name: Sync S3 Buckets
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install and cache apt packages
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: rclone jq
+          version: 1.0
+      
+      - name: Install AWS CLI
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip -q awscliv2.zip
+          sudo ./aws/install
+          aws --version
+      
+      - name: Run S3 bucket sync
+        env:
+          # Pair 1 credentials
+          HETZNER1_ACCESS_KEY: ${{ secrets.HETZNER1_ACCESS_KEY }}
+          HETZNER1_SECRET_KEY: ${{ secrets.HETZNER1_SECRET_KEY }}
+          SCALEWAY1_ACCESS_KEY: ${{ secrets.SCALEWAY1_ACCESS_KEY }}
+          SCALEWAY1_SECRET_KEY: ${{ secrets.SCALEWAY1_SECRET_KEY }}
+          
+          # Pair 2 credentials
+          HETZNER2_ACCESS_KEY: ${{ secrets.HETZNER2_ACCESS_KEY }}
+          HETZNER2_SECRET_KEY: ${{ secrets.HETZNER2_SECRET_KEY }}
+          SCALEWAY2_ACCESS_KEY: ${{ secrets.SCALEWAY2_ACCESS_KEY }}
+          SCALEWAY2_SECRET_KEY: ${{ secrets.SCALEWAY2_SECRET_KEY }}
+          
+          # Pair 3 credentials
+          HETZNER3_ACCESS_KEY: ${{ secrets.HETZNER3_ACCESS_KEY }}
+          HETZNER3_SECRET_KEY: ${{ secrets.HETZNER3_SECRET_KEY }}
+          SCALEWAY3_ACCESS_KEY: ${{ secrets.SCALEWAY3_ACCESS_KEY }}
+          SCALEWAY3_SECRET_KEY: ${{ secrets.SCALEWAY3_SECRET_KEY }}
+          
+          # Pair 4 credentials
+          HETZNER4_ACCESS_KEY: ${{ secrets.HETZNER4_ACCESS_KEY }}
+          HETZNER4_SECRET_KEY: ${{ secrets.HETZNER4_SECRET_KEY }}
+          SCALEWAY4_ACCESS_KEY: ${{ secrets.SCALEWAY4_ACCESS_KEY }}
+          SCALEWAY4_SECRET_KEY: ${{ secrets.SCALEWAY4_SECRET_KEY }}
+        run: |
+          bash sync-s3-buckets.sh
+      
+      - name: Send notification on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'S3 Sync Failed',
+              body: `The S3 bucket sync workflow failed. [Check the logs](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`
+            })

@@ -1,0 +1,25 @@
+# Environment files with secrets
+.env
+.env.local
+.env.*.local
+
+# Temporary rclone configs
+/tmp/rclone-config-*
+
+# AWS CLI
+awscliv2.zip
+aws/
+
+# MacOS
+.DS_Store
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Nix result symlinks
+result
+result-*
